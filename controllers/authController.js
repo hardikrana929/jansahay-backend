@@ -49,43 +49,56 @@ const registerUser = async (req, res) => {
 
 //Login User 
 const loginUser = async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({
-            success: false,
-            message: "All Field required",
-        })
-    }
-
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid Credentials",
-        })
-    }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-        return res.status(400).json({
-            success: false,
-            message: "Invalid Credentials",
-        })
-    }
-    const token = generateToken(user._id);
-
-    return res.status(200).json({
-        success: true,
-        message: "Login Successful.",
-        token,
-        user: {
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required.",
+            });
         }
-    });
-}
+
+        const user = await User.findOne({ email }).select("+password");
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Credentials",
+            });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Credentials",
+            });
+        }
+
+        const token = generateToken(user._id);
+
+        res.status(200).json({
+            success: true,
+            message: "Login Successful.",
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            },
+        });
+    } catch (error) {
+        console.error("Login Error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
 
 
 module.exports = {

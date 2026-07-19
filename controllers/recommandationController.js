@@ -1,71 +1,112 @@
-const Scheme = require('../models/Scheme');
-const UserProfile = require('../models/UserProfiles');
+const Scheme = require("../models/Scheme");
+const UserProfile = require("../models/UserProfiles");
 
-//Get Recommendation
 const getRecommendation = async (req, res) => {
     try {
-        //Find user profile 
         const profile = await UserProfile.findOne({ user: req.user._id });
+
         if (!profile) {
             return res.status(404).json({
                 success: false,
-                message: "Please Complete your Profile first."
+                message: "Please complete your profile first.",
             });
         }
 
-        //Get Active Scheme
+        const {
+            page = 1,
+            limit = 9,
+            search = "",
+            schemeType,
+            government,
+            sort = "latest",
+        } = req.query;
+
         const schemes = await Scheme.find({ isActive: true });
 
-        const recommendation = [];
+        let recommendations = [];
 
         for (const scheme of schemes) {
             let eligible = true;
-            //Check Age 
-            if (profile.age < scheme.minAge || profile.age > scheme.maxAge) {
-                eligible = false;
-            }
 
-            //Check Income
-            if (profile.familyIncome > scheme.incomeLimit) {
+            if (profile.age < scheme.minAge || profile.age > scheme.maxAge)
                 eligible = false;
-            }
 
-            //Check State 
-            if (scheme.state !== "All" && scheme.state !== profile.state) {
+            if (profile.familyIncome > scheme.incomeLimit)
                 eligible = false;
-            }
 
-            //Check Occupation 
-            if (scheme.eligibleOccupations.length && !scheme.eligibleOccupations.includes(profile.occupation)) {
+            if (scheme.state !== "All" && scheme.state !== profile.state)
                 eligible = false;
-            }
 
-            //Check Category
-            if (scheme.eligibleCategories.length && !scheme.eligibleCategories.includes(profile.category)) {
+            if (
+                scheme.eligibleOccupations.length &&
+                !scheme.eligibleOccupations.includes(profile.occupation)
+            )
                 eligible = false;
-            }
 
-            //Check disability
-            if (scheme.disabilityRequired && !profile.disability) {
+            if (
+                scheme.eligibleCategories.length &&
+                !scheme.eligibleCategories.includes(profile.category)
+            )
                 eligible = false;
-            }
 
-            if (eligible) {
-                recommendation.push(scheme);
-            }
+            if (scheme.disabilityRequired && !profile.disability)
+                eligible = false;
+
+            if (eligible) recommendations.push(scheme);
         }
+
+        // Search
+        if (search) {
+            recommendations = recommendations.filter(
+                (scheme) =>
+                    scheme.title.toLowerCase().includes(search.toLowerCase()) ||
+                    scheme.description.toLowerCase().includes(search.toLowerCase())
+            );
+        }
+
+        // Scheme Type
+        if (schemeType) {
+            recommendations = recommendations.filter(
+                (scheme) => scheme.schemeType === schemeType
+            );
+        }
+
+        // Government
+        if (government) {
+            recommendations = recommendations.filter(
+                (scheme) => scheme.government === government
+            );
+        }
+
+        // Sort
+        recommendations.sort((a, b) => {
+            return sort === "oldest"
+                ? new Date(a.createdAt) - new Date(b.createdAt)
+                : new Date(b.createdAt) - new Date(a.createdAt);
+        });
+
+        const total = recommendations.length;
+
+        const start = (page - 1) * limit;
+        const end = start + Number(limit);
+
+        recommendations = recommendations.slice(start, end);
+
         res.status(200).json({
             success: true,
-            total: recommendation.length,
-            recommendation
+            recommendation: recommendations,
+            total,
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / limit),
         });
-
     } catch (error) {
+        console.log(error);
+
         res.status(500).json({
             success: false,
-            message: "Internal Server Error"
+            message: "Internal Server Error",
         });
     }
-}
+};
 
 module.exports = { getRecommendation };

@@ -3,7 +3,6 @@ const Scheme = require('../models/Scheme');
 //Create Scheme
 const createScheme = async (req, res) => {
     try {
-        //Import from body
         const {
             title,
             description,
@@ -22,7 +21,6 @@ const createScheme = async (req, res) => {
             applicationDeadline
         } = req.body;
 
-        // Validate required fields
         if (!title || !description || !schemeType || !government || !benefits || !officialLink || !applicationDeadline) {
             return res.status(400).json({
                 success: false,
@@ -30,7 +28,6 @@ const createScheme = async (req, res) => {
             });
         }
 
-        // Check duplicate scheme
         const existingScheme = await Scheme.findOne({
             title: title.trim()
         });
@@ -42,7 +39,6 @@ const createScheme = async (req, res) => {
             });
         }
 
-        // Create Scheme
         const scheme = await Scheme.create({
             title,
             description,
@@ -76,10 +72,9 @@ const createScheme = async (req, res) => {
     }
 };
 
-//Get all schemes
+//Get all schemes (Public - active only)
 const getAllSchemes = async (req, res) => {
     try {
-
         const {
             page = 1,
             limit = 10,
@@ -94,7 +89,6 @@ const getAllSchemes = async (req, res) => {
             isActive: true
         };
 
-        // Search by title
         if (search) {
             query.title = {
                 $regex: search,
@@ -102,17 +96,14 @@ const getAllSchemes = async (req, res) => {
             };
         }
 
-        // Filter by scheme type
         if (schemeType) {
             query.schemeType = schemeType;
         }
 
-        // Filter by state
         if (state) {
             query.state = state;
         }
 
-        // Filter by government
         if (government) {
             query.government = government;
         }
@@ -139,18 +130,35 @@ const getAllSchemes = async (req, res) => {
         });
 
     } catch (error) {
-
         console.log(error);
-
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
-
     }
 };
 
-//Get One Scheme
+//Get all schemes for Admin (includes inactive ones)
+const getAllSchemesAdmin = async (req, res) => {
+    try {
+        const schemes = await Scheme.find({})
+            .populate("createdBy", "name email")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            total: schemes.length,
+            schemes
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
+
+//Get One Scheme (Public - active only)
 const getSchemeById = async (req, res) => {
     try {
         const scheme = await Scheme.findById(req.params.id).populate("createdBy", "name email");
@@ -172,6 +180,28 @@ const getSchemeById = async (req, res) => {
         });
     }
 }
+
+//Get One Scheme (Admin, includes inactive)
+const getSchemeByIdAdmin = async (req, res) => {
+    try {
+        const scheme = await Scheme.findById(req.params.id).populate("createdBy", "name email");
+        if (!scheme) {
+            return res.status(404).json({
+                success: false,
+                message: "Scheme not found."
+            });
+        }
+        res.status(200).json({
+            success: true,
+            scheme
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error"
+        });
+    }
+};
 
 //Update Scheme
 const updateScheme = async (req, res) => {
@@ -206,7 +236,6 @@ const updateScheme = async (req, res) => {
 //Deactive Scheme
 const deactivateScheme = async (req, res) => {
     try {
-
         const scheme = await Scheme.findById(req.params.id).select("+isActive");
 
         if (!scheme) {
@@ -236,4 +265,12 @@ const deactivateScheme = async (req, res) => {
     }
 };
 
-module.exports = { createScheme, getAllSchemes, getSchemeById, updateScheme, deactivateScheme }
+module.exports = {
+    createScheme,
+    getAllSchemes,
+    getAllSchemesAdmin,
+    getSchemeById,
+    getSchemeByIdAdmin,
+    updateScheme,
+    deactivateScheme
+}

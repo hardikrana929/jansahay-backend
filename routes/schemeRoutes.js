@@ -4,16 +4,9 @@ const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
 const router = express.Router();
 
+router.get('/', authMiddleware, getAllSchemes);
 
-router.post('/', authMiddleware, adminMiddleware, createScheme);
-
-router.get('/', authMiddleware, adminMiddleware, getAllSchemes);
-
-router.get('/:id', authMiddleware, adminMiddleware, getSchemeById);
-
-router.put('/:id', authMiddleware, adminMiddleware, updateScheme);
-
-router.patch('/:id/deactivate', authMiddleware, adminMiddleware, deactivateScheme);
+router.get('/:id', authMiddleware, getSchemeById);
 
 
 module.exports = router;

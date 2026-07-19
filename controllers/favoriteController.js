@@ -46,51 +46,62 @@ const addFavorite = async (req, res) => {
 
 }
 
-//Get Favorite
+// Get Favorite
 const getFavorite = async (req, res) => {
     try {
-        const favorite = await Favorite.find({ user: req.user._id }).populate("scheme");
+
+        const favorites = await Favorite.find({
+            user: req.user._id
+        }).populate("scheme");
+
+        // Remove invalid favorite records
+        const validFavorites = favorites.filter(
+            (item) => item.scheme !== null
+        );
 
         res.status(200).json({
             success: true,
-            total: favorite.length,
-            favorite
+            total: validFavorites.length,
+            favorite: validFavorites
         });
 
     } catch (error) {
-        console.log(error)
+        console.log(error);
+
         res.status(500).json({
             success: false,
             message: "Internal Server Error"
         });
     }
-}
+};
 
 //Delete Favorite
 const removeFavorite = async (req, res) => {
     try {
         const { schemeId } = req.params;
-        const favorites = Favorite.findByIdAndDelete({
+        const favorite = await Favorite.findOneAndDelete({
             user: req.user._id,
             scheme: schemeId
         });
-        if (!favorites) {
-            res.status(404).json({
+
+        if (!favorite) {
+            return res.status(404).json({
                 success: false,
-                message: "Favorite not Found."
-            })
+                message: "Favorite not found."
+            });
         }
 
         res.status(200).json({
             success: true,
             message: "Favorite removed."
         });
+        if (!result.deletedCount) {
+            return res.status(404).json({ success: false, message: "Favorite not Found." });
+        }
+        res.status(200).json({ success: true, message: "Favorite removed." });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal server error."
-        })
+        res.status(500).json({ success: false, message: "Internal server error." });
     }
-}
+};
 
 module.exports = { addFavorite, getFavorite, removeFavorite };

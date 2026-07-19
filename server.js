@@ -25,7 +25,7 @@ app.use(
     cors({
         origin: [
             "http://localhost:5173",
-            "https://your-frontend.vercel.app", // Replace with your actual frontend URL
+            "https://jansahay-frontend.vercel.app", // Replace with your actual frontend URL
         ],
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         credentials: true,

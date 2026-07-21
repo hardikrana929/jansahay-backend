@@ -10,6 +10,6 @@ const generateOTP = () => {
 // way a password would never be stored in plain text.
 const hashOTP = (otp) => {
     return crypto.createHash("sha256").update(otp).digest("hex");
-};
+}; 
 
 module.exports = { generateOTP, hashOTP };

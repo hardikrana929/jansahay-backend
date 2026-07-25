@@ -1,6 +1,8 @@
 const Scheme = require("../models/Scheme");
 const UserProfile = require("../models/UserProfiles");
 
+const normalize = (value) => (value || "").toString().trim().toLowerCase();
+
 const getRecommendation = async (req, res) => {
     try {
         const profile = await UserProfile.findOne({ user: req.user._id });
@@ -34,7 +36,10 @@ const getRecommendation = async (req, res) => {
             if (profile.familyIncome > scheme.incomeLimit)
                 eligible = false;
 
-            if (scheme.state !== "All" && scheme.state !== profile.state)
+            if (
+                normalize(scheme.state) !== "all" &&
+                normalize(scheme.state) !== normalize(profile.state)
+            )
                 eligible = false;
 
             if (

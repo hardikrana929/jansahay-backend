@@ -10,6 +10,8 @@ const schemeRoutes = require("./routes/schemeRoutes");
 const recommendationRoutes = require("./routes/recommandationRoutes");
 const favoriteRoutes = require("./routes/favoriteRoutes");
 const adminSchemeRoutes = require("./routes/adminSchemeRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
+const adminFeedbackRoutes = require("./routes/adminFeedbackRoutes");
 
 dotenv.config();
 
@@ -45,6 +47,10 @@ app.use("/api/admin/schemes", adminSchemeRoutes);
 app.use("/api/recommendation", recommendationRoutes);
 
 app.use("/api/favorites", favoriteRoutes);
+
+app.use("/api/feedback", feedbackRoutes);
+
+app.use("/api/admin/feedback", adminFeedbackRoutes);
 
 // Health Check
 app.get("/", (req, res) => {

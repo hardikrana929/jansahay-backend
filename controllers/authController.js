@@ -9,7 +9,7 @@ const { sendOTPEmail } = require('../utils/sendEmail');
 //Register User
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
 
         // Valid all fields
         if (!name || !email || !password) {
@@ -35,7 +35,7 @@ const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role,
+            role: "user",
         });
 
         res.status(201).json({

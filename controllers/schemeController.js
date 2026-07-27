@@ -203,35 +203,43 @@ const getSchemeByIdAdmin = async (req, res) => {
     }
 };
 
-//Update Scheme
+// controllers/schemeController.js
+const ALLOWED_SCHEME_FIELDS = [
+    "title", "description", "schemeType", "government", "state",
+    "eligibleOccupations", "eligibleCategories", "incomeLimit",
+    "minAge", "maxAge", "disabilityRequired", "benefits",
+    "documentsRequired", "officialLink", "applicationDeadline",
+    // deliberately NOT included: createdBy, isActive, _id
+];
+
 const updateScheme = async (req, res) => {
     try {
+        const updates = {};
+        for (const field of ALLOWED_SCHEME_FIELDS) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
+        }
+
         const updatedScheme = await Scheme.findByIdAndUpdate(
             req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true,
-            }
-        )
+            updates,
+            { new: true, runValidators: true }
+        );
+
         if (!updatedScheme) {
-            return res.status(404).json({
-                success: false,
-                message: "Scheme is not Found."
-            })
+            return res.status(404).json({ success: false, message: "Scheme is not Found." });
         }
+
         res.status(200).json({
             success: true,
             message: "Scheme Updated successfully.",
-            scheme: updatedScheme
-        })
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error"
+            scheme: updatedScheme,
         });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
-}
+};
 
 //Deactive Scheme
 const deactivateScheme = async (req, res) => {

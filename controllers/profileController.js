@@ -90,38 +90,43 @@ const getProfile = async (req, res) => {
     }
 }
 
-//Update Profile
+// controllers/profileController.js
+const ALLOWED_PROFILE_FIELDS = [
+    "age", "gender", "state", "district", "occupation", "education",
+    "familyIncome", "category", "disability", "farmer",
+    "landOwnership", "businessOwner", "maritalStatus",
+];
+
 const updateProfile = async (req, res) => {
     try {
-        const profile = await UserProfile.findOne({
-            user: req.user._id
-        })
-
+        const profile = await UserProfile.findOne({ user: req.user._id });
         if (!profile) {
+            return res.status(404).json({ success: false, message: "Profile not found" });
+        }
 
-            return res.status(404).json({
-                success: false,
-                message: "Profile not found"
-            });
-
+        // ✅ build a clean object containing ONLY fields we allow
+        const updates = {};
+        for (const field of ALLOWED_PROFILE_FIELDS) {
+            if (req.body[field] !== undefined) {
+                updates[field] = req.body[field];
+            }
         }
 
         const updatedProfile = await UserProfile.findOneAndUpdate(
-            { user: req.user._id },
-            req.body,
-            { new: true, runValidators: true });
+            { user: req.user._id },   // ownership is still enforced by the filter
+            updates,                  // but now only whitelisted fields can change
+            { new: true, runValidators: true }
+        );
+
         res.status(200).json({
             success: true,
             message: "Profile Updated Successful.",
             profile: updatedProfile,
-        })
+        });
     } catch (error) {
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        })
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
-}
+};
 
 //Delete Profile
 const deleteProfile = async (req, res) => {

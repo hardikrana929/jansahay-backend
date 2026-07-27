@@ -27,5 +27,19 @@ const getDashboardStats = async (req, res) => {
         });
     }
 };
+// create admin
+const createAdminUser = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(12));
+        const admin = await User.create({ name, email, password: hashedPassword, role: "admin" });
+        res.status(201).json({ success: true, message: "Admin created", admin: { id: admin._id, email } });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
 
-module.exports = { getDashboardStats };
+module.exports = { getDashboardStats, createAdminUser };

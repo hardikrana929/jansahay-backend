@@ -13,6 +13,7 @@ const adminSchemeRoutes = require("./routes/adminSchemeRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminFeedbackRoutes = require("./routes/adminFeedbackRoutes");
 const mongoSanitize = require("express-mongo-sanitize");
+const cookieParser = require("cookie-parser");
 const helmet = require("helmet")
 
 dotenv.config();

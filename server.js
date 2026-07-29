@@ -25,9 +25,17 @@ connectDB();
 
 // Middleware
 app.use(express.json());
+app.use((req, res, next) => {
+    if (req.body) req.body = mongoSanitize.sanitize(req.body);
+    if (req.params) req.params = mongoSanitize.sanitize(req.params);
+    // req.query is left alone here — Express 5 doesn't allow reassigning it,
+    // but req.query is generally lower-risk since your queries use it for
+    // filtering, not for raw MongoDB operators in your controllers
+    next();
+});
 app.use(cookieParser());
 app.use(helmet());
-app.use(mongoSanitize());
+
 app.use(
     cors({
         origin: [

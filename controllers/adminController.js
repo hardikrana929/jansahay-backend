@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Scheme = require("../models/Scheme");
+const bcrypt = require("bcryptjs");
 const UserProfile = require("../models/UserProfiles");
 
 // Get Admin Dashboard Stats
@@ -31,14 +32,14 @@ const getDashboardStats = async (req, res) => {
 const createAdminUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ success: false, message: "All fields required" });
+        }
         const hashedPassword = await bcrypt.hash(password, await bcrypt.genSalt(12));
         const admin = await User.create({ name, email, password: hashedPassword, role: "admin" });
         res.status(201).json({ success: true, message: "Admin created", admin: { id: admin._id, email } });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+        res.status(500).json({ success: false, message: "Internal Server Error" });
     }
 };
 

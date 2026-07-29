@@ -12,13 +12,18 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        const token = authHeader.split(" ")[1];
+        const token = req.cookies?.token;
+
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Access denied. No token provided."
+            });
+        }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        console.log("Decoded:", decoded);
-
-        const user = await User.findById(decoded.id);
+        const user = await User.findById(decoded.id).select("name email role");
 
         if (!user) {
             return res.status(404).json({

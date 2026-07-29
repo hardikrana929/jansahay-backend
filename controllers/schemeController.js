@@ -203,7 +203,6 @@ const getSchemeByIdAdmin = async (req, res) => {
     }
 };
 
-// controllers/schemeController.js
 const ALLOWED_SCHEME_FIELDS = [
     "title", "description", "schemeType", "government", "state",
     "eligibleOccupations", "eligibleCategories", "incomeLimit",

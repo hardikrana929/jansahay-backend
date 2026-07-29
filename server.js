@@ -12,6 +12,8 @@ const favoriteRoutes = require("./routes/favoriteRoutes");
 const adminSchemeRoutes = require("./routes/adminSchemeRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminFeedbackRoutes = require("./routes/adminFeedbackRoutes");
+const mongoSanitize = require("express-mongo-sanitize");
+const helmet = require("helmet")
 
 dotenv.config();
 
@@ -22,7 +24,9 @@ connectDB();
 
 // Middleware
 app.use(express.json());
-
+app.use(cookieParser());
+app.use(helmet());
+app.use(mongoSanitize());
 app.use(
     cors({
         origin: [

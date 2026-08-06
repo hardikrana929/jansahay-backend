@@ -28,27 +28,45 @@ const getRecommendation = async (req, res) => {
         for (const scheme of schemes) {
             let eligible = true;
 
+            // Age check
             if (profile.age < scheme.minAge || profile.age > scheme.maxAge)
                 eligible = false;
 
-            if (profile.familyIncome > scheme.incomeLimit)
+            // Income check — incomeLimit of 0 (or falsy) means "no cap"
+            if (scheme.incomeLimit > 0 && profile.familyIncome > scheme.incomeLimit)
                 eligible = false;
 
-            if (scheme.state !== "All" && scheme.state !== profile.state)
+            // State check — accept "All" / "All India" as universal, case-insensitive
+            const stateIsUniversal =
+                !scheme.state ||
+                scheme.state.toLowerCase() === "all" ||
+                scheme.state.toLowerCase() === "all india";
+
+            if (
+                !stateIsUniversal &&
+                scheme.state.toLowerCase() !== (profile.state || "").toLowerCase()
+            )
                 eligible = false;
 
+            // Occupation check — case-insensitive match
             if (
                 scheme.eligibleOccupations.length &&
-                !scheme.eligibleOccupations.includes(profile.occupation)
+                !scheme.eligibleOccupations.some(
+                    (o) => o.toLowerCase() === (profile.occupation || "").toLowerCase()
+                )
             )
                 eligible = false;
 
+            // Category check — case-insensitive match
             if (
                 scheme.eligibleCategories.length &&
-                !scheme.eligibleCategories.includes(profile.category)
+                !scheme.eligibleCategories.some(
+                    (c) => c.toLowerCase() === (profile.category || "").toLowerCase()
+                )
             )
                 eligible = false;
 
+            // Disability check
             if (scheme.disabilityRequired && !profile.disability)
                 eligible = false;
 
@@ -57,10 +75,11 @@ const getRecommendation = async (req, res) => {
 
         // Search
         if (search) {
+            const searchLower = search.toLowerCase();
             recommendations = recommendations.filter(
                 (scheme) =>
-                    scheme.title.toLowerCase().includes(search.toLowerCase()) ||
-                    scheme.description.toLowerCase().includes(search.toLowerCase())
+                    scheme.title.toLowerCase().includes(searchLower) ||
+                    scheme.description.toLowerCase().includes(searchLower)
             );
         }
 
@@ -87,7 +106,7 @@ const getRecommendation = async (req, res) => {
 
         const total = recommendations.length;
 
-        const start = (page - 1) * limit;
+        const start = (page - 1) * Number(limit);
         const end = start + Number(limit);
 
         recommendations = recommendations.slice(start, end);
@@ -97,7 +116,7 @@ const getRecommendation = async (req, res) => {
             recommendation: recommendations,
             total,
             currentPage: Number(page),
-            totalPages: Math.ceil(total / limit),
+            totalPages: Math.ceil(total / Number(limit)),
         });
     } catch (error) {
         console.log(error);
